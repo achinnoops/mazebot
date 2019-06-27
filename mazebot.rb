@@ -8,7 +8,9 @@ require "json"
 
 def main
   # get started — replace with your login
-  start = post_json('/mazebot/race/start', { :login => 'mazebot' })
+  puts "Enter username:"
+  username = gets.delete("\n")
+  start = post_json('/mazebot/race/start', { :login => username })
 
   maze_path = start['nextMaze']
   # get the first maze
