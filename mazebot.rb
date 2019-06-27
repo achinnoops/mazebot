@@ -15,26 +15,103 @@ def main
   next_maze = get_json(maze_path)
   # Answer each question, as long as we are correct
   loop do
-
-    # print out the map
-    puts
-    puts "Here's the map:"
-    puts
-    next_maze['map'].each { |row| puts(row.join('')) }
-    puts
-
-    puts "What are the directions from point A to point B?"
-
+	puts "Solving: " + next_maze['name']
     # your code to figure out the answer could also go here
-    directions = gets.delete("\n")
+    # directions = gets.delete("\n")
+	
+	move_list = [[["A", next_maze['startingPosition'][1], next_maze['startingPosition'][0]]]]
 
+	directionsMap = solve_maze(next_maze['map'], move_list)
+
+	directions = ""
+	directionsMap.each { |move|
+	   directions = directions + move[0]
+	}
+	directions = directions.slice(1, directions.length)
     # send to mazebot
     solution_result = send_solution(maze_path, directions)
     if solution_result['result'] == 'success'
       maze_path = solution_result['nextMaze']
+	 
       next_maze = get_json(maze_path)
+	elsif solution_result['result'] == 'finished'
+	   puts solution_result
+	   break
     end
   end
+end
+
+def solve_maze(mazeData, move_list)
+  nextMove = Array.new
+  move_list.each { |move|
+  
+    rows = mazeData.length
+	cols = mazeData.first.length
+
+	lastx = move.last[1]
+	lasty = move.last[2]
+	
+	if lastx < cols and lasty + 1 < rows
+		coord = mazeData[lastx][lasty + 1]
+		e = ["E", lastx, lasty + 1]
+		if coord === " "
+			mazeData[lastx][lasty + 1] = "→"
+			mv = move.dup().push(e)
+			nextMove.push(mv)
+		elsif coord === "B"
+			 move.push(e)
+			 return move
+		end
+	end
+	
+	if lastx < cols and lasty - 1 >= 0
+		coord = mazeData[lastx][lasty - 1]
+		w = ["W", lastx, lasty - 1]
+		if coord === " "
+			mazeData[lastx][lasty - 1] = "<"			
+			mv = move.dup().push(w)
+			nextMove.push(mv)
+		elsif coord === "B"
+			 move.push(w)
+			 return move
+		end
+	end
+	
+	
+	if lastx + 1 < cols and lasty < rows
+		coord = mazeData[lastx + 1][lasty]
+		s = ["S", lastx + 1, lasty]
+		if coord === " "
+			mazeData[lastx + 1][lasty] = "v"
+			mv = move.dup().push(s)
+			nextMove.push(mv)
+		elsif coord === "B"
+			 move.push(s)
+			 return move
+		end
+	end
+	
+	
+	if lastx - 1 >= 0 and lasty < rows
+		coord = mazeData[lastx - 1][lasty]
+		n = ["N", lastx - 1, lasty]
+		if coord === " "
+			mazeData[lastx - 1][lasty] = "^"
+			mv = move.dup().push(n)
+			nextMove.push(mv)
+		elsif coord === "B"
+			 move.push(n)
+			 return move
+		end
+	end
+  }
+  
+  	if nextMove.length > 0
+		return solve_maze(mazeData, nextMove)
+	end
+		
+	return []
+  
 end
 
 def send_solution(path, directions)
